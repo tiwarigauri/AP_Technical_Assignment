@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  mysql:
+    container_name: mysql
+    image: 'mysql:8'
+    volumes:
+      - ./dbdata:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: auth_service
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - '3301:3306'
+    networks:
+      - bootapp
+    restart: always
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8087:8080'
+    networks:
+      - bootapp
+    volumes:
+      - ./data:/var/lib/mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+networks:
+  bootapp:
